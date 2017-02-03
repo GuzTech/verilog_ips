@@ -35,12 +35,12 @@ module stack #(
     
     always @ (*) begin
         // Use 1'b1 and not 1, because 1 is
-		// an integer and by default, they
-		// are 32 bits. Verilog arithmetic
-		// uses the bit width of the largest
-		// opererand for the entire expression,
-		// meaning you'll get a truncation
-		// warning.
+        // an integer and by default, they
+        // are 32 bits. Verilog arithmetic
+        // uses the bit width of the largest
+        // opererand for the entire expression,
+        // meaning you'll get a truncation
+        // warning.
         ptr_m = stack_ptr - 1'b1;
     end
 endmodule
