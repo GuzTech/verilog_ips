@@ -14,12 +14,7 @@ module stack #(
 
     reg [STACK_WIDTH-1:0] mem[0:2**STACK_SIZE-1];
     reg [ STACK_SIZE-1:0] stack_ptr;
-    reg [ STACK_SIZE-1:0] ptr_p;
     reg [ STACK_SIZE-1:0] ptr_m;
-    
-    // Only used to remove the truncation warnings
-    reg [STACK_SIZE*2-1:0] tmp_p;
-    reg [31:0]             tmp_m;
     
     always @ (posedge clk) begin
         if (reset) begin
@@ -28,26 +23,24 @@ module stack #(
         end else begin
             if (push) begin
                 mem[stack_ptr] <= data_in;
-                stack_ptr      <= ptr_p;
+                stack_ptr      <= stack_ptr + 1'b1;
             end
             
             if (pop) begin
                 data_out  <= mem[ptr_m];
-                stack_ptr <= ptr_m;
+                stack_ptr <= stack_ptr - 1'b1;
             end
         end 
     end
     
     always @ (*) begin
-        // +1 causes an overflow, so the
-        // tmp_p reg is one bit larger.
-        tmp_p = stack_ptr + 1;
-        ptr_p = tmp_p[STACK_SIZE-1:0];
-        
-        // -1 causes an underflow, and the
-        // default arithmetic result size is
-        // 32 bits.
-        tmp_m = stack_ptr - 1;
-        ptr_m = tmp_m[STACK_SIZE-1:0];
+        // Use 1'b1 and not 1, because 1 is
+		// an integer and by default, they
+		// are 32 bits. Verilog arithmetic
+		// uses the bit width of the largest
+		// opererand for the entire expression,
+		// meaning you'll get a truncation
+		// warning.
+        ptr_m = stack_ptr - 1'b1;
     end
 endmodule
