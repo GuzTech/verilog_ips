@@ -24,15 +24,15 @@ module stack_tb;
         $dumpfile("dump.vcd");
         $dumpvars(1, stack_tb);
         
-        clk = 1;
-        reset = 1;
-        push = 0;
-        pop = 0;
-        data_in = 0;
+        clk = 1'b1;
+        reset = 1'b1;
+        push = 1'b0;
+        pop = 1'b0;
+        data_in = 18'b0;
         
         toggle_clk;
         toggle_clk;
-        reset = 0;
+        reset = 1'b0;
         toggle_clk;
         
         $display("reset ptr: %h", DUT.stack_ptr);
@@ -40,7 +40,7 @@ module stack_tb;
 //            $display("%h %h", i, DUT.stack_mem[i]);
         end
         
-        push = 1;
+        push = 1'b1;
         data_in = 18'b010101010101010101;
         toggle_clk;
         
@@ -73,17 +73,25 @@ module stack_tb;
 //            $display("%h %h", i, DUT.stack_mem[i]);
         end
         
-        push = 0;
-        pop = 1;
+        push = 1'b0;
+        pop = 1'b1;
         toggle_clk;
         
-        pop = 0;
+        pop = 1'b0;
         toggle_clk;
         
-        pop = 1;
+        pop = 1'b1;
         toggle_clk;
         toggle_clk;
         toggle_clk;
+        toggle_clk;
+        toggle_clk;
+        toggle_clk;
+        
+        push = 1'b1;
+        data_in = 18'b111100001111000011;
+        toggle_clk;
+        push = 1'b0;
         toggle_clk;
         toggle_clk;
         toggle_clk;
