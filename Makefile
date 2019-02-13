@@ -3,3 +3,12 @@ sim:
 
 yosys:
 	yosys -p 'read_verilog stack.v; proc; opt; memory; opt; hierarchy; opt; show -prefix output -format svg -colors 42 -viewer eog stack;'
+
+deserializer:
+	sby -f deserializer.sby
+
+deserializer_rst:
+	sby -f deserializer_rst.sby
+
+serializer:
+	sby -f serializer.sby

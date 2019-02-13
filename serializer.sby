@@ -1,0 +1,19 @@
+[tasks]
+cvr
+prf
+
+[options]
+cvr: mode cover
+cvr: depth 11
+prf: mode prove
+prf: depth 10
+
+[engines]
+smtbmc
+
+[script]
+read -formal serializer.sv
+prep -top serializer
+
+[files]
+serializer.sv

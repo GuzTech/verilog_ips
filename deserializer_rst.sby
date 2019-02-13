@@ -1,0 +1,19 @@
+[tasks]
+cvr
+prf
+
+[options]
+cvr: mode cover
+cvr: depth 10
+prf: mode prove
+prf: depth 10
+
+[engines]
+smtbmc
+
+[script]
+read -formal deserializer_rst.sv
+prep -top deserializer_rst
+
+[files]
+deserializer_rst.sv
