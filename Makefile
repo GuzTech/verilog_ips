@@ -12,3 +12,5 @@ deserializer_rst:
 
 serializer:
 	sby -f serializer.sby
+
+formal: deserializer deserializer_rst serializer
