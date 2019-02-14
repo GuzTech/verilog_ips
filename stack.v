@@ -184,5 +184,13 @@ module stack #(
         assert($stable(int_mem[k]));
     end
   endgenerate
+
+  // Check whether we can retrieve pushed data.
+  genvar j;
+  generate for (j = 0; j < STACK_SIZE; j = j + 1) begin
+    always @(posedge i_clk)
+      cover(f_past_valid[j] && $past(i_push, j) && (o_data != STACK_WIDTH'd0) && (o_data == f_data));
+    end
+  endgenerate
 `endif
 endmodule
