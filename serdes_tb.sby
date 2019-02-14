@@ -1,0 +1,26 @@
+[tasks]
+cvr
+prf
+bmc
+
+[options]
+cvr: mode cover
+cvr: depth 20
+prf: mode prove
+prf: depth 20
+bmc: mode bmc
+bmc: depth 20
+
+[engines]
+smtbmc
+
+[script]
+read -formal serdes_tb.v
+read -formal serializer.sv
+read -formal deserializer.sv
+prep -top serdes_tb
+
+[files]
+serializer.sv
+deserializer.sv
+serdes_tb.v
