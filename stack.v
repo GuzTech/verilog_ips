@@ -33,42 +33,42 @@ module stack #(
     parameter STACK_WIDTH = 18,
     parameter STACK_SIZE  = 1
 ) (
-    input                        clk,
-    input                        reset,
-    input                        push,
-    input                        pop,
-    input      [STACK_WIDTH-1:0] data_in,
-    output reg [STACK_WIDTH-1:0] data_out
+  input                        i_clk,
+  input                        i_rst,
+  input                        i_push,
+  input                        i_pop,
+  input      [STACK_WIDTH-1:0] i_data,
+  output reg [STACK_WIDTH-1:0] o_data
 );
-    reg [STACK_WIDTH-1:0] mem[0:2**STACK_SIZE-1];
-    reg [ STACK_SIZE-1:0] stack_ptr;
-    reg [ STACK_SIZE-1:0] ptr_m;
-    
-    always @ (posedge clk) begin
-        if (reset) begin
-            stack_ptr <= 0;
-            data_out  <= 0;
-        end else begin
-            if (push) begin                
-                if (!pop) begin // Just push
-                    mem[stack_ptr] <= data_in;
-                    stack_ptr      <= stack_ptr + 1'b1;
-                end else begin // Push and pop
-                    data_out   <= mem[ptr_m];
-                    mem[ptr_m] <= data_in;
-                end
-            end else if (pop) begin // Just pop
-                data_out  <= mem[ptr_m];
-                stack_ptr <= ptr_m;
-            end
-        end 
-    end
+  reg [STACK_WIDTH-1:0] int_mem[0:2**STACK_SIZE-1];
+  reg [ STACK_SIZE-1:0] int_stack_ptr;
+  reg [ STACK_SIZE-1:0] int_ptr_m;
 
-    always @ (*) begin
-        // Use 1'b1 and not 1, because 1 is an integer and by default,
-        // they are 32 bits. Verilog arithmetic uses the bit width of
-        // the largest opererand for the entire expression, meaning 
-        // you'll get a truncation warning.
-        ptr_m = stack_ptr - 1'b1;
-    end
+  always @(posedge i_clk) begin
+    if (i_rst) begin
+      int_stack_ptr <= STACK_SIZE'd0;
+      int_data_out  <= STACK_WIDTH'd0;
+    end else begin
+      if (i_push) begin                
+        if (!i_pop) begin // Just push
+          int_mem[int_stack_ptr] <= i_data;
+          int_stack_ptr          <= int_stack_ptr + 1'b1;
+        end else begin // Push and pop
+          o_data             <= int_mem[int_ptr_m];
+          int_mem[int_ptr_m] <= i_data;
+        end
+      end else if (i_pop) begin // Just pop
+        o_data        <= int_mem[int_ptr_m];
+        int_stack_ptr <= int_ptr_m;
+      end
+    end 
+  end
+
+  always @(*) begin
+    // Use 1'b1 and not 1, because 1 is an integer and by default,
+    // they are 32 bits. Verilog arithmetic uses the bit width of
+    // the largest opererand for the entire expression, meaning 
+    // you'll get a truncation warning.
+    int_ptr_m = int_stack_ptr - 1'b1;
+  end
 endmodule
