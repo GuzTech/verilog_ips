@@ -41,13 +41,13 @@ module stack #(
   output reg [STACK_WIDTH-1:0] o_data
 );
   reg [STACK_WIDTH-1:0] int_mem[0:2**STACK_SIZE-1];
-  reg [ STACK_SIZE-1:0] int_stack_ptr;
-  reg [ STACK_SIZE-1:0] int_ptr_m;
+  reg [ STACK_SIZE-1:0] int_stack_ptr = STACK_SIZE'd0;
+  reg [ STACK_SIZE-1:0] int_ptr_m     = -STACK_SIZE'd1;
 
   always @(posedge i_clk) begin
     if (i_rst) begin
       int_stack_ptr <= STACK_SIZE'd0;
-      int_data_out  <= STACK_WIDTH'd0;
+      o_data        <= STACK_WIDTH'd0;
     end else begin
       if (i_push) begin                
         if (!i_pop) begin // Just push
@@ -71,4 +71,24 @@ module stack #(
     // you'll get a truncation warning.
     int_ptr_m = int_stack_ptr - 1'b1;
   end
+
+`ifdef FORMAL
+  /*
+   * Setup
+   */
+  reg f_past_valid;
+  initial f_past_valid = 1'b0;
+  always @(posedge i_clk)
+    f_past_valid <= 1'b1;
+
+  /*
+   * Reset
+   */
+  always @(posedge i_clk) begin
+    if (!f_past_valid || $past(i_rst)) begin
+      assert(int_stack_ptr == STACK_SIZE'd0);
+      assert(int_ptr_m     == -STACK_SIZE'd1);
+    end
+  end
+`endif
 endmodule
