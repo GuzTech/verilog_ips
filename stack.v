@@ -49,7 +49,7 @@ module stack #(
 
   always @(posedge i_clk) begin
     if (i_rst) begin
-      int_stack_ptr <= STACK_SIZE'd0;
+      int_stack_ptr <= PNTR_BITS'd0;
       o_data        <= STACK_WIDTH'd0;
     end else begin
       if (i_push) begin                
@@ -57,12 +57,12 @@ module stack #(
           int_mem[int_stack_ptr] <= i_data;
           int_stack_ptr          <= int_stack_ptr + 1'b1;
         end else begin // Push and pop
-          o_data             <= int_mem[int_ptr_m];
           int_mem[int_ptr_m] <= i_data;
+          o_data             <= int_mem[int_ptr_m];
         end
       end else if (i_pop) begin // Just pop
-        o_data        <= int_mem[int_ptr_m];
         int_stack_ptr <= int_ptr_m;
+        o_data        <= int_mem[int_ptr_m];
       end
     end 
   end
@@ -79,10 +79,15 @@ module stack #(
   /*
    * Setup
    */
-  reg f_past_valid;
-  initial f_past_valid = 1'b0;
+  reg [1:0] f_past_valids;
+  initial f_past_valids = 2'b0;
+  wire f_past_valid;
+  wire f_past_valid_2;
+  assign f_past_valid    = f_past_valids[0];
+  assign  f_past_valid_2 = f_past_valids[1];
+
   always @(posedge i_clk)
-    f_past_valid <= 1'b1;
+    f_past_valids <= {f_past_valids[0], 1'b1};
 
   /*
    * Reset
@@ -130,5 +135,54 @@ module stack #(
   always @(*)
     assert(int_stack_ptr <= MAX_VALUE);
 
+  /*
+   * Data
+   */
+  reg  [STACK_WIDTH-1:0] f_data;
+  wire f_only_push;
+  wire f_only_pop;
+  wire f_push_pop;
+  assign f_only_push = i_push && !i_pop;
+  assign f_only_pop  = !i_push && i_pop;
+  assign f_push_pop  = i_push && i_pop;
+
+  // Store 
+  always @(posedge i_clk)
+    if (i_push)
+      f_data <= i_data;
+
+  // Check that if we only push, then the data is stored correctly, and in the
+  // correct position as well.
+  always @(posedge i_clk) begin
+    if (f_past_valid && !$past(i_rst) && $past(f_only_push))
+      assert(int_mem[$past(int_stack_ptr)] == $past(i_data));
+  end
+
+  // Check that if we only push and then only pop, we get back the value we
+  // pushed before.
+  always @(posedge i_clk) begin
+    // Previous 2 clock cycles should be valid.
+    if (f_past_valid_2
+    // We have not reset in the previous 2 clock cycles.
+    && !$past(i_rst) && !$past(i_rst, 2)
+    // We only pushed two clock cycles ago...
+    && $past(f_only_push, 2)
+    // ...and have only popped the previous clock cycle.
+    && $past(f_only_pop))
+      // Then the data we pushed before, should be the data we output now.
+      assert(o_data == f_data);
+  end
+
+  // Check that if we only pop, then the state of the internal memory does not
+  // change. We cannot use $stable(int_mem) because the solver gives an error
+  // about int_mem mapping to an unexpanded memory.
+  genvar k;
+  generate for (k = 0; k < STACK_SIZE; k = k + 1) begin
+    always @(posedge i_clk)
+      if (f_past_valid && !$past(i_rst)
+      && $past(f_only_pop) && int_stack_ptr == k)
+        assert($stable(int_mem[k]));
+    end
+  endgenerate
 `endif
 endmodule
