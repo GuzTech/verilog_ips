@@ -31,7 +31,7 @@
 
 module stack #(
     parameter STACK_WIDTH = 18,
-    parameter STACK_SIZE  = 1
+    parameter STACK_SIZE  = 4
 ) (
   input                        i_clk,
   input                        i_rst,
@@ -40,9 +40,12 @@ module stack #(
   input      [STACK_WIDTH-1:0] i_data,
   output reg [STACK_WIDTH-1:0] o_data
 );
-  reg [STACK_WIDTH-1:0] int_mem[0:2**STACK_SIZE-1];
-  reg [ STACK_SIZE-1:0] int_stack_ptr = STACK_SIZE'd0;
-  reg [ STACK_SIZE-1:0] int_ptr_m     = -STACK_SIZE'd1;
+  localparam PNTR_BITS = $clog2(STACK_SIZE - 1);
+  localparam MAX_VALUE = STACK_SIZE - 1;
+
+  reg [STACK_WIDTH-1:0] int_mem[0:PNTR_BITS-1];
+  reg [  PNTR_BITS-1:0] int_stack_ptr = PNTR_BITS'd0;
+  reg [  PNTR_BITS-1:0] int_ptr_m     = -PNTR_BITS'd1;
 
   always @(posedge i_clk) begin
     if (i_rst) begin
@@ -86,9 +89,46 @@ module stack #(
    */
   always @(posedge i_clk) begin
     if (!f_past_valid || $past(i_rst)) begin
-      assert(int_stack_ptr == STACK_SIZE'd0);
-      assert(int_ptr_m     == -STACK_SIZE'd1);
+      assert(int_stack_ptr ==  PNTR_BITS'd0);
+      assert(int_ptr_m     == -PNTR_BITS'd1);
     end
   end
+
+  /*
+   * Counter
+   */
+  // Check whether the counter resets back to zero.
+  always @(posedge i_clk) begin
+    if (f_past_valid && !$past(i_rst)) begin
+      // Just pushing
+      if ($past(i_push) && !$past(i_pop)) begin
+        // Check overflow
+        if ($past(int_stack_ptr) == MAX_VALUE)
+          assert(int_stack_ptr == PNTR_BITS'd0);
+        else
+          assert(int_stack_ptr == $past(int_stack_ptr) + 1'b1);
+      // Pushing and popping
+      end else if ($past(i_push) && $past(i_pop)) begin
+        assert($stable(int_stack_ptr));
+        assert($stable(int_ptr_m));
+      // Just popping
+      end else if (!$past(i_push) && $past(i_pop)) begin
+        // Check underflow
+        if ($past(int_stack_ptr) == PNTR_BITS'd0)
+          assert(int_stack_ptr == -PNTR_BITS'd1);
+        else
+          assert(int_stack_ptr == $past(int_stack_ptr) - 1'b1);
+      end
+    end
+  end
+
+  // Check that the -1 pointer is always one smaller than the stack pointer.
+  always @(*)
+    assert(int_ptr_m == (int_stack_ptr - PNTR_BITS'd1));
+
+  // Check that the counter is never larger than the maximum counter value.
+  always @(*)
+    assert(int_stack_ptr <= MAX_VALUE);
+
 `endif
 endmodule

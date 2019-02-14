@@ -12,7 +12,7 @@ The deserializer, deserializer_rst, serializer, and serializer_rst IPs come with
 first. To check a specific IP, run `make <IP name>` or if you want to check all of them, run `make formal`.
 
 ## Status
-The stack implementation has not been formally verified yet, but will be.
+The stack implementation has only been partially formally verified, and is being worked on.
 
 ## License
 verilog_ips is free and open hardware and is licensed under the [ISC licence](http://en.wikipedia.org/wiki/ISC_license).
