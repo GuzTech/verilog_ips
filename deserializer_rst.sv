@@ -18,8 +18,7 @@
 
 module deserializer_rst #(
   parameter DATA_WIDTH = 8
-)
-(
+) (
   input                   i_clk,
   input                   i_rst,
   input                   i_wen,
@@ -30,17 +29,24 @@ module deserializer_rst #(
   localparam CNTR_BITS = $clog2(DATA_WIDTH - 1);
   localparam MAX_VALUE = DATA_WIDTH - 1;
 
-  reg [CNTR_BITS-1:0]  int_cntr  = CNTR_BITS'd0;
   reg [DATA_WIDTH-1:0] int_data;
-  reg                  int_valid = 1'b0;
+  reg [CNTR_BITS-1:0]  int_cntr;
+  reg                  int_valid;
 
-  assign o_valid = int_valid;
-  assign o_data  = int_data;
+  initial begin
+    int_cntr  = CNTR_BITS'd0;
+    int_valid = 1'b0;
+  end
+
+  always @(*) begin
+    o_data  = int_data;
+    o_valid = int_valid;
+  end
 
   always @(posedge i_clk) begin
     if (i_rst) begin
-      int_valid <= 1'b0;
       int_cntr  <= CNTR_BITS'd0;
+      int_valid <= 1'b0;
     end else if (i_wen) begin
       int_data[int_cntr] <= i_data;
       int_cntr           <= int_cntr + 1;

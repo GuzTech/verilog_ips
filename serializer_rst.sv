@@ -18,8 +18,7 @@
 
 module serializer_rst #(
   parameter DATA_WIDTH = 8
-)
-(
+) (
   input                   i_clk,
   input                   i_rst,
   input                   i_wen,
@@ -30,12 +29,19 @@ module serializer_rst #(
   localparam CNTR_BITS = $clog2(DATA_WIDTH - 1);
   localparam MAX_VALUE = DATA_WIDTH - 1;
 
-  reg [CNTR_BITS-1:0]  int_cntr = CNTR_BITS'd0;
   reg [DATA_WIDTH-1:0] int_data;
+  reg [CNTR_BITS-1:0]  int_cntr = CNTR_BITS'd0;
   reg                  int_busy = 1'b0;
 
-  assign o_busy = int_busy;
-  assign o_data = int_data[int_cntr];
+  initial begin
+    int_cntr = CNTR_BITS'd0;
+    int_busy = 1'b0;
+  end
+
+  always @(*) begin
+    o_data = int_data[int_cntr];
+    o_busy = int_busy;
+  end
 
   always @(posedge i_clk) begin
     if (i_rst) begin
